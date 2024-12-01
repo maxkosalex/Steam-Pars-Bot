@@ -13,7 +13,7 @@ cookies, headers = for_cs_money()
 
 
 def main():
-    get_data_from_CSMoney(50, 50.02)
+    get_data_from_CSMoney(21, 21.5)
     find_items_on_steam(datetime.datetime.now().strftime('%Y-%m-%d'))
     # aaa()
 
@@ -53,7 +53,6 @@ def get_data_from_CSMoney(min_price, max_price):
 
 def save_on_data(json_data, date):
     item_count = defaultdict(int)
-    all_items = []
     # Проход по всем элементам и подсчет повторений
     for item in json_data["items"]:
         name = item.get("fullName")
@@ -75,9 +74,9 @@ def save_on_data(json_data, date):
 def find_items_on_steam(date):
     pattern = r"\(\s*(\d+)\s*\)"
 
-    all_links = steam_links()
+    all_links_on_date = steam_links(date) # Ссылок найденные на текущую дату
 
-    for link, *_ in all_links: # "*_" - Распаковка, если нужно работать только с первым элементом
+    for link, *_ in all_links_on_date: # "*_" - Распаковка, если нужно работать только с первым элементом
 
         attempt = 0
 
@@ -94,7 +93,7 @@ def find_items_on_steam(date):
                     period_data = re.search(r'var line1=(.+);', response_text)
                     period_data = period_data.group(1)
 
-                    data = json.loads(period_data)[-10:]
+                    data = json.loads(period_data)[-20:]
 
                 except:
                     print("ошибка в group")
@@ -135,55 +134,6 @@ def find_items_on_steam(date):
                 print(response.status_code, " Ожидание 2 минуты")
                 time.sleep(120)
                 attempt += 1
-
-
-def aaa():
-    conn = sqlite3.connect('steam_links.db')
-    cursor = conn.cursor()
-
-    items = cursor.execute('''SELECT 
-        link, 
-        MIN(price) AS min_price, 
-        count,
-        name
-    FROM 
-        CSMoney
-    WHERE 
-        count > 3
-    GROUP BY 
-        count 
-    HAVING 
-        COUNT(*) = 1 OR MIN(price) = price''').fetchall()
-
-    for i in items:
-        print(i[0])
-        a = cursor.execute(f"SELECT json FROM MarketPlace WHERE link = '{i[0]}'").fetchone()
-        print(i[3])
-        if a is not None and isinstance(a, tuple):
-
-            json_string = a[0]
-
-            if json_string is not None:
-
-                data = json.loads(json_string)
-
-                # Доступ к различным частям данных
-                buyer_data = data.get("Buyer")[0]
-                seller_data = data.get("Seller")[0]
-
-                price = i[1]
-                count = i[2]
-
-                procent = ((buyer_data[0]-price)/price)*100
-
-                # Выводим результаты
-                print(f"купить за {price} в кол-ве {count}\nПродается за {seller_data[0]} в кол-ве {seller_data[1]}, покупается за {buyer_data[0]} в кол-ве {buyer_data[1]}\nВыгода:{procent}%")
-
-
-            else:
-                print("Ошибка: строка JSON является None.")
-        else:
-            print("Ошибка: результат запроса является None или не является кортежем.")
 
 
 if __name__ == "__main__":

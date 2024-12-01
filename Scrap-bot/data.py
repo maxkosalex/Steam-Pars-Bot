@@ -41,7 +41,7 @@ def create_db():
 
 
 def save_data_CSM(items):
-    conn = sqlite3.connect('steam_links.db')
+    conn = sqlite3.connect('../steam_links.db')
     cursor = conn.cursor()
 
     for link, name, date, count, price in items:
@@ -63,11 +63,11 @@ def save_data_CSM(items):
     conn.close()
 
 
-def steam_links():
-    conn = sqlite3.connect('steam_links.db')
+def steam_links(date):
+    conn = sqlite3.connect('../steam_links.db')
     cursor = conn.cursor()
 
-    links = cursor.execute("SELECT link FROM Steam_Links").fetchall()
+    links = cursor.execute("SELECT link FROM CSMoney WHERE date = ?",(date,)).fetchall()
 
     conn.close()
 
@@ -75,7 +75,7 @@ def steam_links():
 
 
 def save_data_SM(link, date, json):
-    conn = sqlite3.connect('steam_links.db')
+    conn = sqlite3.connect('../steam_links.db')
     cursor = conn.cursor()
 
     cursor.execute("INSERT OR REPLACE INTO MarketPlace (link, date, json) VALUES (?, ?, ?)",
@@ -83,5 +83,3 @@ def save_data_SM(link, date, json):
 
     conn.commit()
     conn.close()
-
-create_db()
